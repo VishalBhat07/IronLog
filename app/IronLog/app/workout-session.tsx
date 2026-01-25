@@ -86,7 +86,7 @@ export default function WorkoutSessionScreen() {
                     onPress: async () => {
                         try {
                             await workoutApi.finish(workoutId as string);
-                            router.replace('/(tabs)/progress'); // Go to summary/progress
+                            router.replace({ pathname: '/workout-complete', params: { id: workoutId } });
                         } catch (error) {
                             Alert.alert('Error', 'Failed to finish workout');
                         }

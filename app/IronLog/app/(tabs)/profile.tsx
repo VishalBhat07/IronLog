@@ -1,11 +1,12 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { View, Text, ScrollView, TouchableOpacity, TextInput, Alert, ActivityIndicator, Image } from 'react-native';
-import { useRouter } from 'expo-router';
+import { useRouter, useFocusEffect } from 'expo-router';
 import { MaterialIcons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
-import { authApi } from '@/services/api';
+import { authApi, workoutApi } from '@/services/api';
 import { useAuth } from '@/context/AuthContext';
+import * as ImagePicker from 'expo-image-picker';
 
 export default function ProfileScreen() {
     const router = useRouter();
@@ -14,30 +15,93 @@ export default function ProfileScreen() {
     const [profile, setProfile] = useState<any>(null);
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
+    const [workouts, setWorkouts] = useState<any[]>([]);
 
     // Form Stats
     const [bio, setBio] = useState('');
     const [height, setHeight] = useState('');
     const [weight, setWeight] = useState('');
     const [gender, setGender] = useState('Prefer not to say');
+    const [profileImage, setProfileImage] = useState<string | null>(null);
 
-    useEffect(() => {
-        const fetchProfile = async () => {
-            try {
-                const data = await authApi.getMe();
-                setProfile(data);
-                setBio(data.bio || '');
-                setHeight(data.height?.toString() || '');
-                setWeight(data.weight?.toString() || '');
-                setGender(data.gender || 'Prefer not to say');
-            } catch (error) {
-                console.error("Failed to load profile", error);
-            } finally {
-                setLoading(false);
+    useFocusEffect(
+        useCallback(() => {
+            fetchData();
+        }, [])
+    );
+
+    const fetchData = async () => {
+        try {
+            const data = await authApi.getMe();
+            setProfile(data);
+            setBio(data.bio || '');
+            setHeight(data.height?.toString() || '');
+            setWeight(data.weight?.toString() || '');
+            setGender(data.gender || 'Prefer not to say');
+            setProfileImage(data.profileImage || null);
+
+            // Fetch workouts for streak calculation
+            const history = await workoutApi.getHistory(100);
+            if (history.success) {
+                setWorkouts(history.workouts);
             }
-        };
-        fetchProfile();
-    }, []);
+        } catch (error) {
+            console.error("Failed to load profile", error);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    // Calculate highest streak ever
+    const calculateHighestStreak = () => {
+        if (workouts.length === 0) return 0;
+        
+        const sortedWorkouts = [...workouts].sort((a, b) => 
+            new Date(a.endedAt).getTime() - new Date(b.endedAt).getTime()
+        );
+        
+        const workoutDates = [...new Set(
+            sortedWorkouts.map(w => new Date(w.endedAt).toISOString().split('T')[0])
+        )].sort();
+        
+        if (workoutDates.length === 0) return 0;
+        
+        let highestStreak = 1;
+        let currentStreak = 1;
+        
+        for (let i = 1; i < workoutDates.length; i++) {
+            const prevDate = new Date(workoutDates[i - 1]);
+            const currDate = new Date(workoutDates[i]);
+            const diffDays = Math.round((currDate.getTime() - prevDate.getTime()) / 86400000);
+            
+            if (diffDays === 1) {
+                currentStreak++;
+                highestStreak = Math.max(highestStreak, currentStreak);
+            } else {
+                currentStreak = 1;
+            }
+        }
+        
+        return highestStreak;
+    };
+
+    const pickImage = async () => {
+        let result = await ImagePicker.launchImageLibraryAsync({
+            mediaTypes: ['images'],
+            allowsEditing: true,
+            aspect: [1, 1],
+            quality: 0.3,
+            base64: true,
+        });
+
+        if (!result.canceled) {
+            const asset = result.assets[0];
+            if (asset.base64) {
+                const imageUri = `data:image/jpeg;base64,${asset.base64}`;
+                setProfileImage(imageUri);
+            }
+        }
+    };
 
     const handleSave = async () => {
         setSaving(true);
@@ -46,7 +110,8 @@ export default function ProfileScreen() {
                 bio,
                 height: height ? parseFloat(height) : undefined,
                 weight: weight ? parseFloat(weight) : undefined,
-                gender
+                gender,
+                profileImage
             });
             Alert.alert("Success", "Profile updated successfully");
         } catch (error) {
@@ -69,6 +134,7 @@ export default function ProfileScreen() {
                         try {
                             await authApi.clearData();
                             Alert.alert("Data Cleared");
+                            setWorkouts([]);
                         } catch(e) { Alert.alert("Error deleting data"); }
                     }
                 }
@@ -96,6 +162,9 @@ export default function ProfileScreen() {
         );
     };
 
+    const highestStreak = calculateHighestStreak();
+    const totalWorkouts = workouts.length;
+
     if (loading) {
         return (
             <SafeAreaView className="flex-1 bg-charcoal items-center justify-center">
@@ -119,7 +188,7 @@ export default function ProfileScreen() {
         <SafeAreaView className="flex-1 bg-charcoal">
             <StatusBar style="light" />
             
-            {/* Header - No Back Button since it's a Tab */}
+            {/* Header */}
             <View className="flex-row items-center justify-between px-6 py-4 border-b border-white/5">
                 <Text className="text-white text-lg font-bold">My Profile</Text>
                 <TouchableOpacity onPress={handleSave} disabled={saving} className="bg-primary/10 px-4 py-2 rounded-full border border-primary/20">
@@ -130,10 +199,14 @@ export default function ProfileScreen() {
             <ScrollView className="flex-1 px-6 pt-6" contentContainerStyle={{ paddingBottom: 100 }}>
                 
                 {/* Profile Picture Section */}
-                <View className="items-center mb-8">
-                    <TouchableOpacity className="relative">
+                <View className="items-center mb-6">
+                    <TouchableOpacity onPress={pickImage} className="relative">
                         <View className="w-24 h-24 rounded-full bg-card-dark border-2 border-primary/20 items-center justify-center overflow-hidden">
-                             <Text className="text-white text-3xl font-black">{profile?.name?.charAt(0) || 'U'}</Text>
+                             {profileImage ? (
+                                 <Image source={{ uri: profileImage }} className="w-full h-full" resizeMode="cover" />
+                             ) : (
+                                 <Text className="text-white text-3xl font-black">{profile?.name?.charAt(0) || 'U'}</Text>
+                             )}
                         </View>
                         <View className="absolute bottom-0 right-0 w-8 h-8 bg-primary rounded-full items-center justify-center border-2 border-charcoal">
                             <MaterialIcons name="camera-alt" size={14} color="white" />
@@ -141,6 +214,25 @@ export default function ProfileScreen() {
                     </TouchableOpacity>
                     <Text className="text-white text-xl font-black mt-4">{profile?.name}</Text>
                     <Text className="text-gray-500 text-sm">{profile?.email}</Text>
+                </View>
+
+                {/* Stats Cards */}
+                <View className="flex-row gap-3 mb-6">
+                    <View className="flex-1 bg-primary/10 border border-primary/20 rounded-2xl p-4 items-center justify-center">
+                        <MaterialIcons name="fitness-center" size={24} color="#3b82f6" />
+                        <Text className="text-2xl font-black text-white mt-2 text-center">{totalWorkouts}</Text>
+                        <Text className="text-gray-500 text-[10px] font-bold uppercase tracking-wider text-center">Total Workouts</Text>
+                    </View>
+                    <View className="flex-1 bg-orange-500/10 border border-orange-500/20 rounded-2xl p-4 items-center">
+                        <MaterialIcons name="local-fire-department" size={24} color="#f97316" />
+                        <Text className="text-2xl font-black text-white mt-2">{highestStreak}</Text>
+                        <Text className="text-gray-500 text-[10px] font-bold uppercase tracking-wider">Best Streak</Text>
+                    </View>
+                    <View className="flex-1 bg-field-dark/50 border border-white/5 rounded-2xl p-4 items-center">
+                        <MaterialIcons name="scale" size={24} color="#3b82f6" />
+                        <Text className="text-2xl font-black text-white mt-2">{weight || '--'}</Text>
+                        <Text className="text-gray-500 text-[10px] font-bold uppercase tracking-wider">Weight (kg)</Text>
+                    </View>
                 </View>
 
                 {/* Form Fields */}
@@ -225,6 +317,20 @@ export default function ProfileScreen() {
                              <Text className="text-red-500 font-bold">Delete Account</Text>
                         </View>
                         <MaterialIcons name="chevron-right" size={20} color="#ef4444" />
+                    </TouchableOpacity>
+
+                    <TouchableOpacity onPress={async () => {
+                        try {
+                            await authApi.seedWeights();
+                            Alert.alert('Success', 'Legacy weight data imported!');
+                            fetchData(); // refresh
+                        } catch(e) { Alert.alert('Error', 'Failed to import data'); }
+                    }} className="flex-row items-center justify-between p-4 border-t border-white/5 active:bg-blue-500/10">
+                         <View className="flex-row items-center gap-3">
+                             <MaterialIcons name="cloud-download" size={20} color="#3b82f6" />
+                             <Text className="text-primary font-bold">Import Legacy Data</Text>
+                        </View>
+                        <MaterialIcons name="chevron-right" size={20} color="#3b82f6" />
                     </TouchableOpacity>
                 </View>
 

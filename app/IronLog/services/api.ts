@@ -55,6 +55,10 @@ export const authApi = {
     deleteAccount: async () => {
         const response = await api.delete('/api/auth/me');
         return response.data;
+    },
+    seedWeights: async () => {
+        const response = await api.post('/api/auth/seed-weights', {});
+        return response.data;
     }
 };
 

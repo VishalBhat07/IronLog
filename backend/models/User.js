@@ -33,6 +33,10 @@ const UserSchema = new mongoose.Schema(
     bio: { type: String, default: '' },
     height: { type: Number }, // cm
     weight: { type: Number }, // kg
+    weightHistory: [{
+        weight: Number,
+        date: { type: Date, default: Date.now }
+    }],
     gender: { type: String, enum: ['Male', 'Female', 'Other', 'Prefer not to say'], default: 'Prefer not to say' },
     goals: [{ type: String }]
   },

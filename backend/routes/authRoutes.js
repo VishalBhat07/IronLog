@@ -21,4 +21,7 @@ router.delete('/data', authMiddleware, authController.clearData);
 // Delete Account
 router.delete('/me', authMiddleware, authController.deleteAccount);
 
+// Seed Weights (Temp)
+router.post('/seed-weights', authMiddleware, authController.seedWeights);
+
 module.exports = router;
