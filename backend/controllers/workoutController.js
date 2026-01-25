@@ -123,6 +123,24 @@ exports.getHistory = async (req, res) => {
   }
 };
 
+// Get current active workout (not finished)
+exports.getActive = async (req, res) => {
+  try {
+    const session = await WorkoutSession.findOne({ 
+        userId: req.user.id, 
+        endedAt: { $exists: false } 
+    }).sort({ startedAt: -1 });
+
+    if (!session) {
+        return res.status(200).json({ success: true, active: false });
+    }
+
+    res.status(200).json({ success: true, active: true, workout: session });
+  } catch (error) {
+    res.status(500).json({ success: false, message: 'Error checking active workout', error: error.message });
+  }
+};
+
 // Get specific workout (for resuming active or viewing details)
 exports.getWorkout = async (req, res) => {
     try {

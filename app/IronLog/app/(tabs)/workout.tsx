@@ -3,15 +3,44 @@ import { MaterialIcons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
 import { useState } from 'react';
-import { useRouter } from 'expo-router';
+import { useRouter, useFocusEffect } from 'expo-router';
 import { workoutApi } from '@/services/api';
+import { useCallback } from 'react';
 
 export default function WorkoutScreen() {
     const router = useRouter();
     const [selectedType, setSelectedType] = useState('Strength');
+    const [activeWorkoutId, setActiveWorkoutId] = useState<string | null>(null);
     const workoutTypes = ['Strength', 'Cardio', 'Mixed', 'Recovery'];
 
+    useFocusEffect(
+        useCallback(() => {
+            const checkActive = async () => {
+                try {
+                    const result = await workoutApi.getActive();
+                    if (result.active && result.workout) {
+                        setActiveWorkoutId(result.workout._id);
+                    } else {
+                        setActiveWorkoutId(null);
+                    }
+                } catch (e) {
+                    console.log('Error checking active workout');
+                }
+            };
+            checkActive();
+        }, [])
+    );
+
     const handleStartSession = async () => {
+        if (activeWorkoutId) {
+            // Resume
+            router.push({
+                pathname: '/workout-session',
+                params: { workoutId: activeWorkoutId }
+            });
+            return;
+        }
+
         try {
             const result = await workoutApi.start(selectedType.toLowerCase());
             if (result.success) {
@@ -22,8 +51,7 @@ export default function WorkoutScreen() {
             }
         } catch (error) {
             console.error('Failed to start workout', error);
-            // Optionally could navigate anyway for offline/demo if API fails
-            // But for now, strict API.
+            // Optionally show alert
         }
     };
 
@@ -33,7 +61,9 @@ export default function WorkoutScreen() {
             
             {/* Header */}
             <View className="flex-row items-center justify-between px-6 pt-4 pb-4">
-                <Text className="text-white text-2xl font-black tracking-tight">Start Workout</Text>
+                <Text className="text-white text-2xl font-black tracking-tight">
+                    {activeWorkoutId ? 'Resume Workout' : 'Start Workout'}
+                </Text>
                 <TouchableOpacity>
                     <MaterialIcons name="settings" size={24} color="#9ca3af" />
                 </TouchableOpacity>
@@ -90,7 +120,9 @@ export default function WorkoutScreen() {
                     onPress={handleStartSession}
                     className="w-full bg-primary h-16 rounded-2xl items-center justify-center shadow-lg shadow-primary/30 active:scale-[0.98]"
                 >
-                    <Text className="text-white font-black text-lg uppercase tracking-widest">Start Session</Text>
+                    <Text className="text-white font-black text-lg uppercase tracking-widest">
+                        {activeWorkoutId ? 'Resume Session' : 'Start Session'}
+                    </Text>
                 </TouchableOpacity>
             </View>
 

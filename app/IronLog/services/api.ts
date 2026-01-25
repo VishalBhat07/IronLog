@@ -60,6 +60,10 @@ export const workoutApi = {
         const response = await api.get(`/api/workouts?limit=${limit}`);
         return response.data;
     },
+    getActive: async () => {
+        const response = await api.get('/api/workouts/active');
+        return response.data;
+    },
     getById: async (workoutId: string) => {
         const response = await api.get(`/api/workouts/${workoutId}`);
         return response.data;
