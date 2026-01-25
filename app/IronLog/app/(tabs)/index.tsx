@@ -68,9 +68,12 @@ export default function HomeScreen() {
                 <Text className="text-gray-500 text-xs font-bold uppercase tracking-widest mb-1">{currentDate}</Text>
                 <Text className="text-white text-2xl font-black">Good Evening, {user?.name?.split(' ')[0] || 'Athlete'}</Text>
             </View>
-            <View className="w-10 h-10 rounded-full border border-white/10 bg-card-dark items-center justify-center overflow-hidden">
+            <TouchableOpacity 
+                onPress={() => router.push('/profile')}
+                className="w-10 h-10 rounded-full border border-white/10 bg-card-dark items-center justify-center overflow-hidden"
+            >
                 <MaterialIcons name="person" size={24} color="#9ca3af" />
-            </View>
+            </TouchableOpacity>
         </View>
 
         {/* ... Active/Start Workout Card ... */}

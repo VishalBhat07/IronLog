@@ -26,7 +26,15 @@ const UserSchema = new mongoose.Schema(
     createdAt: {
       type: Date,
       default: Date.now
-    }
+    },
+
+    // Profile Details
+    profileImage: { type: String, default: null },
+    bio: { type: String, default: '' },
+    height: { type: Number }, // cm
+    weight: { type: Number }, // kg
+    gender: { type: String, enum: ['Male', 'Female', 'Other', 'Prefer not to say'], default: 'Prefer not to say' },
+    goals: [{ type: String }]
   },
   { versionKey: false }
 );

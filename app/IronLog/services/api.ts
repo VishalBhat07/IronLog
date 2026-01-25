@@ -38,6 +38,26 @@ export const removeToken = async () => {
     await SecureStore.deleteItemAsync('token');
 };
 
+// Auth API
+export const authApi = {
+    getMe: async () => {
+        const response = await api.get('/api/auth/me');
+        return response.data;
+    },
+    updateProfile: async (data: any) => {
+        const response = await api.put('/api/auth/profile', data);
+        return response.data;
+    },
+    clearData: async () => {
+        const response = await api.delete('/api/auth/data');
+        return response.data;
+    },
+    deleteAccount: async () => {
+        const response = await api.delete('/api/auth/me');
+        return response.data;
+    }
+};
+
 // Workout API
 export const workoutApi = {
     start: async (type: string = 'strength', notes?: string) => {
