@@ -96,6 +96,44 @@ export default function WorkoutSessionScreen() {
         );
     };
 
+    const handleDeleteSet = async (exerciseId: string, setId: string) => {
+        try {
+            const result = await workoutApi.deleteSet(workoutId as string, exerciseId, setId);
+            if (result.success) {
+                setExercises(prev => prev.map(ex => {
+                    if (ex._id !== exerciseId) return ex;
+                    return { ...ex, sets: ex.sets.filter((s: any) => s._id !== setId) };
+                }));
+            }
+        } catch (error) {
+            Alert.alert('Error', 'Failed to delete set');
+        }
+    };
+
+    const handleDeleteExercise = async (exerciseId: string) => {
+        Alert.alert(
+            "Delete Exercise",
+            "Are you sure you want to delete this exercise and all its sets?",
+            [
+                { text: "Cancel", style: "cancel" },
+                { 
+                    text: "Delete", 
+                    style: "destructive",
+                    onPress: async () => {
+                         try {
+                            const result = await workoutApi.deleteExercise(workoutId as string, exerciseId);
+                            if (result.success) {
+                                setExercises(prev => prev.filter(ex => ex._id !== exerciseId));
+                            }
+                        } catch (error) {
+                            Alert.alert('Error', 'Failed to delete exercise');
+                        }
+                    }
+                }
+            ]
+        );
+    };
+
     return (
         <View className="flex-1 bg-charcoal">
             <StatusBar style="light" />
@@ -130,6 +168,9 @@ export default function WorkoutSessionScreen() {
                                     <Text className="text-white text-xl font-black tracking-tight">{exercise.name}</Text>
                                     <Text className="text-xs text-gray-500 font-bold uppercase tracking-wider">{exercise.target || 'Muscle'}</Text>
                                 </View>
+                                <TouchableOpacity onPress={() => handleDeleteExercise(exercise._id)} className="p-2">
+                                    <MaterialIcons name="delete-outline" size={24} color="#ef4444" />
+                                </TouchableOpacity>
                             </View>
 
                             <View className="p-4">
@@ -147,9 +188,12 @@ export default function WorkoutSessionScreen() {
                                         </View>
                                         <Text className="flex-1 text-center text-white font-bold text-lg">{set.weight}</Text>
                                         <Text className="flex-1 text-center text-white font-bold text-lg">{set.reps}</Text>
-                                        <View className="w-12 items-center justify-center">
-                                            <MaterialIcons name="check-circle" size={20} color="#3b82f6" />
-                                        </View>
+                                        <TouchableOpacity 
+                                            onPress={() => handleDeleteSet(exercise._id, set._id)}
+                                            className="w-12 items-center justify-center opacity-70"
+                                        >
+                                            <MaterialIcons name="close" size={20} color="#6b7280" />
+                                        </TouchableOpacity>
                                     </View>
                                 ))}
 

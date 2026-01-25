@@ -152,4 +152,49 @@ exports.getWorkout = async (req, res) => {
     } catch (error) {
         res.status(500).json({ success: false, message: 'Error fetching workout', error: error.message });
     }
-}
+};
+
+exports.deleteSet = async (req, res) => {
+    try {
+        const { workoutId, exerciseId, setId } = req.params;
+        const session = await WorkoutSession.findOne({ _id: workoutId, userId: req.user.id });
+        if (!session) return res.status(404).json({ success: false, message: 'Workout not found' });
+        
+        const exercise = session.exercises.id(exerciseId);
+        if (!exercise) return res.status(404).json({ success: false, message: 'Exercise not found' });
+        
+        exercise.sets.pull(setId);
+        await session.save();
+        
+        res.json({ success: true, message: 'Set deleted', workout: session });
+    } catch (error) {
+        res.status(500).json({ success: false, message: 'Error deleting set', error: error.message });
+    }
+};
+
+exports.deleteExercise = async (req, res) => {
+    try {
+        const { workoutId, exerciseId } = req.params;
+        const session = await WorkoutSession.findOne({ _id: workoutId, userId: req.user.id });
+        if (!session) return res.status(404).json({ success: false, message: 'Workout not found' });
+        
+        session.exercises.pull(exerciseId);
+        await session.save();
+        
+        res.json({ success: true, message: 'Exercise deleted', workout: session });
+    } catch (error) {
+        res.status(500).json({ success: false, message: 'Error deleting exercise', error: error.message });
+    }
+};
+
+exports.deleteWorkout = async (req, res) => {
+    try {
+        const { workoutId } = req.params;
+        const result = await WorkoutSession.findOneAndDelete({ _id: workoutId, userId: req.user.id });
+        if (!result) return res.status(404).json({ success: false, message: 'Workout not found' });
+        
+        res.json({ success: true, message: 'Workout deleted' });
+    } catch (error) {
+        res.status(500).json({ success: false, message: 'Error deleting workout', error: error.message });
+    }
+};

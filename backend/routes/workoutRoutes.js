@@ -14,4 +14,8 @@ router.get('/', workoutController.getHistory); // ?limit=10
 router.get('/active', workoutController.getActive); // Must be before :workoutId
 router.get('/:workoutId', workoutController.getWorkout);
 
+router.delete('/:workoutId', workoutController.deleteWorkout);
+router.delete('/:workoutId/exercises/:exerciseId', workoutController.deleteExercise);
+router.delete('/:workoutId/exercises/:exerciseId/sets/:setId', workoutController.deleteSet);
+
 module.exports = router;

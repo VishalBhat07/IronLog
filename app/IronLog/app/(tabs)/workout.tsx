@@ -68,7 +68,7 @@ export default function WorkoutScreen() {
                 <Text className="text-white text-2xl font-black tracking-tight">
                     {activeWorkoutId ? 'Resume Workout' : 'Start Workout'}
                 </Text>
-                <TouchableOpacity>
+                <TouchableOpacity onPress={() => router.push('/(tabs)/profile')}>
                     <MaterialIcons name="settings" size={24} color="#9ca3af" />
                 </TouchableOpacity>
             </View>
@@ -118,21 +118,6 @@ export default function WorkoutScreen() {
                         <Text className="text-gray-500 text-xs">
                              {lastWorkoutId ? 'View details of your last session' : 'No history yet'}
                         </Text>
-                    </View>
-                    <MaterialIcons name="chevron-right" size={24} color="#4b5563" />
-                </TouchableOpacity>
-
-                {/* View Workout History Button */}
-                <TouchableOpacity 
-                    onPress={() => router.push('/workout-history')}
-                    className="mt-4 p-5 bg-card-dark border border-white/5 rounded-2xl flex-row items-center gap-4 active:bg-white/5"
-                >
-                    <View className="bg-white/5 p-2 rounded-lg">
-                        <MaterialIcons name="list-alt" size={24} color="#9ca3af" />
-                    </View>
-                    <View className="flex-1">
-                        <Text className="text-white text-sm font-bold">Workout History</Text>
-                        <Text className="text-gray-500 text-xs">View all past sessions</Text>
                     </View>
                     <MaterialIcons name="chevron-right" size={24} color="#4b5563" />
                 </TouchableOpacity>

@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { View, Text, Pressable, ScrollView, Modal, TouchableOpacity, ActivityIndicator, Dimensions } from 'react-native';
+import { View, Text, Pressable, ScrollView, Modal, TouchableOpacity, ActivityIndicator, Dimensions, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
 import { MaterialIcons } from '@expo/vector-icons';
@@ -154,6 +154,31 @@ export default function ProgressScreen() {
         setShowCalendar(false);
     };
 
+    const handleDeleteWorkout = async (id: string) => {
+        Alert.alert(
+            "Delete Workout",
+            "Are you sure?",
+            [
+                { text: "Cancel", style: "cancel" },
+                { 
+                    text: "Delete", 
+                    style: "destructive",
+                    onPress: async () => {
+                        try {
+                            const result = await workoutApi.deleteWorkout(id);
+                            if (result.success) {
+                                fetchData(); // Refresh global list
+                                setSelectedDayWorkouts(prev => prev.filter(w => w._id !== id));
+                            }
+                        } catch (e) {
+                            Alert.alert("Error", "Failed to delete");
+                        }
+                    }
+                }
+            ]
+        );
+    };
+
     if (loading) return <View className="flex-1 bg-charcoal items-center justify-center"><ActivityIndicator color="#3b82f6" /></View>;
 
     return (
@@ -247,23 +272,27 @@ export default function ProgressScreen() {
                        {selectedDayWorkouts.length > 0 ? (
                            <View className="gap-3">
                                {selectedDayWorkouts.map((w, i) => (
-                                   <TouchableOpacity 
-                                       key={i} 
-                                       onPress={() => router.push({ pathname: '/workout-details/[id]', params: { id: w._id }})}
-                                       className="bg-field-dark/50 border border-white/5 rounded-xl p-4 active:bg-white/5"
-                                   >
-                                        <Text className="text-white font-bold capitalize mb-2">{w.type}</Text>
-                                        <View className="flex-row gap-4">
-                                            <View className="flex-row items-center gap-1">
-                                                <MaterialIcons name="timer" size={14} color="#9ca3af" />
-                                                <Text className="text-gray-500 text-xs">{formatDuration(w)}</Text>
+                                   <View key={i} className="bg-field-dark/50 border border-white/5 rounded-xl p-4 flex-row items-center">
+                                       <TouchableOpacity 
+                                           onPress={() => router.push({ pathname: '/workout-details/[id]', params: { id: w._id }})}
+                                           className="flex-1"
+                                       >
+                                            <Text className="text-white font-bold capitalize mb-2">{w.type}</Text>
+                                            <View className="flex-row gap-4">
+                                                <View className="flex-row items-center gap-1">
+                                                    <MaterialIcons name="timer" size={14} color="#9ca3af" />
+                                                    <Text className="text-gray-500 text-xs">{formatDuration(w)}</Text>
+                                                </View>
+                                                <View className="flex-row items-center gap-1">
+                                                    <MaterialIcons name="fitness-center" size={14} color="#9ca3af" />
+                                                    <Text className="text-gray-500 text-xs">{calculateVolume(w).toLocaleString()} kg</Text>
+                                                </View>
                                             </View>
-                                            <View className="flex-row items-center gap-1">
-                                                <MaterialIcons name="fitness-center" size={14} color="#9ca3af" />
-                                                <Text className="text-gray-500 text-xs">{calculateVolume(w).toLocaleString()} kg</Text>
-                                            </View>
-                                        </View>
-                                   </TouchableOpacity>
+                                       </TouchableOpacity>
+                                       <TouchableOpacity onPress={() => handleDeleteWorkout(w._id)} className="p-2 ml-2">
+                                            <MaterialIcons name="delete-outline" size={24} color="#ef4444" />
+                                       </TouchableOpacity>
+                                   </View>
                                ))}
                            </View>
                        ) : (

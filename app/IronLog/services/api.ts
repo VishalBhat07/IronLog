@@ -91,6 +91,18 @@ export const workoutApi = {
     getById: async (workoutId: string) => {
         const response = await api.get(`/api/workouts/${workoutId}`);
         return response.data;
+    },
+    deleteWorkout: async (workoutId: string) => {
+        const response = await api.delete(`/api/workouts/${workoutId}`);
+        return response.data;
+    },
+    deleteExercise: async (workoutId: string, exerciseId: string) => {
+        const response = await api.delete(`/api/workouts/${workoutId}/exercises/${exerciseId}`);
+        return response.data;
+    },
+    deleteSet: async (workoutId: string, exerciseId: string, setId: string) => {
+        const response = await api.delete(`/api/workouts/${workoutId}/exercises/${exerciseId}/sets/${setId}`);
+        return response.data;
     }
 };
 

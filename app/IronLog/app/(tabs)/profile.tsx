@@ -201,15 +201,15 @@ export default function ProfileScreen() {
                 {/* Profile Picture Section */}
                 <View className="items-center mb-6">
                     <TouchableOpacity onPress={pickImage} className="relative">
-                        <View className="w-24 h-24 rounded-full bg-card-dark border-2 border-primary/20 items-center justify-center overflow-hidden">
+                        <View className="w-32 h-32 rounded-full bg-card-dark border-2 border-primary/20 items-center justify-center overflow-hidden">
                              {profileImage ? (
                                  <Image source={{ uri: profileImage }} className="w-full h-full" resizeMode="cover" />
                              ) : (
-                                 <Text className="text-white text-3xl font-black">{profile?.name?.charAt(0) || 'U'}</Text>
+                                 <Text className="text-white text-4xl font-black">{profile?.name?.charAt(0) || 'U'}</Text>
                              )}
                         </View>
-                        <View className="absolute bottom-0 right-0 w-8 h-8 bg-primary rounded-full items-center justify-center border-2 border-charcoal">
-                            <MaterialIcons name="camera-alt" size={14} color="white" />
+                        <View className="absolute bottom-1 right-1 w-10 h-10 bg-primary rounded-full items-center justify-center border-2 border-charcoal">
+                            <MaterialIcons name="camera-alt" size={18} color="white" />
                         </View>
                     </TouchableOpacity>
                     <Text className="text-white text-xl font-black mt-4">{profile?.name}</Text>
@@ -218,20 +218,20 @@ export default function ProfileScreen() {
 
                 {/* Stats Cards */}
                 <View className="flex-row gap-3 mb-6">
-                    <View className="flex-1 bg-primary/10 border border-primary/20 rounded-2xl p-4 items-center justify-center">
+                    <View className="flex-1 bg-field-dark/50 border border-white/5 rounded-2xl p-4 items-center justify-center">
                         <MaterialIcons name="fitness-center" size={24} color="#3b82f6" />
                         <Text className="text-2xl font-black text-white mt-2 text-center">{totalWorkouts}</Text>
                         <Text className="text-gray-500 text-[10px] font-bold uppercase tracking-wider text-center">Total Workouts</Text>
-                    </View>
-                    <View className="flex-1 bg-orange-500/10 border border-orange-500/20 rounded-2xl p-4 items-center">
-                        <MaterialIcons name="local-fire-department" size={24} color="#f97316" />
-                        <Text className="text-2xl font-black text-white mt-2">{highestStreak}</Text>
-                        <Text className="text-gray-500 text-[10px] font-bold uppercase tracking-wider">Best Streak</Text>
                     </View>
                     <View className="flex-1 bg-field-dark/50 border border-white/5 rounded-2xl p-4 items-center">
                         <MaterialIcons name="scale" size={24} color="#3b82f6" />
                         <Text className="text-2xl font-black text-white mt-2">{weight || '--'}</Text>
                         <Text className="text-gray-500 text-[10px] font-bold uppercase tracking-wider">Weight (kg)</Text>
+                    </View>
+                    <View className="flex-1 bg-orange-500/10 border border-orange-500/20 rounded-2xl p-4 items-center">
+                        <MaterialIcons name="local-fire-department" size={24} color="#f97316" />
+                        <Text className="text-2xl font-black text-white mt-2">{highestStreak}</Text>
+                        <Text className="text-gray-500 text-[10px] font-bold uppercase tracking-wider">Best Streak</Text>
                     </View>
                 </View>
 
@@ -277,17 +277,17 @@ export default function ProfileScreen() {
 
                      <View>
                         <Text className="text-gray-500 text-xs font-bold uppercase tracking-wider mb-2">Gender</Text>
-                        <ScrollView horizontal showsHorizontalScrollIndicator={false} className="flex-row gap-2">
-                            {['Male', 'Female', 'Other'].map(g => (
+                        <View className="flex-row gap-4">
+                            {['Male', 'Female'].map(g => (
                                 <TouchableOpacity 
                                     key={g} 
                                     onPress={() => setGender(g)}
-                                    className={`px-4 py-2 rounded-lg border ${gender === g ? 'bg-primary border-primary' : 'bg-card-dark border-white/5'}`}
+                                    className={`flex-1 px-4 py-3 rounded-xl border items-center justify-center ${gender === g ? 'bg-primary border-primary' : 'bg-card-dark border-white/5'}`}
                                 >
                                     <Text className={`font-bold ${gender === g ? 'text-white' : 'text-gray-500'}`}>{g}</Text>
                                 </TouchableOpacity>
                             ))}
-                        </ScrollView>
+                        </View>
                     </View>
                 </View>
 
