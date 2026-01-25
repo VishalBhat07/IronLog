@@ -2,42 +2,47 @@ import { View, Text, ScrollView, TouchableOpacity, TextInput } from 'react-nativ
 import { MaterialIcons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import { useRouter, useFocusEffect } from 'expo-router';
 import { workoutApi } from '@/services/api';
-import { useCallback } from 'react';
 
 export default function WorkoutScreen() {
     const router = useRouter();
     const [selectedType, setSelectedType] = useState('Strength');
     const [activeWorkoutId, setActiveWorkoutId] = useState<string | null>(null);
+    const [lastWorkoutId, setLastWorkoutId] = useState<string | null>(null);
     const workoutTypes = ['Strength', 'Cardio', 'Mixed', 'Recovery'];
 
     useFocusEffect(
         useCallback(() => {
-            const checkActive = async () => {
+            const checkData = async () => {
                 try {
-                    const result = await workoutApi.getActive();
-                    if (result.active && result.workout) {
-                        setActiveWorkoutId(result.workout._id);
+                    // Check active
+                    const activeRes = await workoutApi.getActive();
+                    if (activeRes.active && activeRes.workout) {
+                        setActiveWorkoutId(activeRes.workout._id);
                     } else {
                         setActiveWorkoutId(null);
                     }
+
+                    // Get Last Workout for 'Previous Routine'
+                    const historyRes = await workoutApi.getHistory(1);
+                    if (historyRes.success && historyRes.workouts.length > 0) {
+                        setLastWorkoutId(historyRes.workouts[0]._id);
+                    } else {
+                        setLastWorkoutId(null);
+                    }
                 } catch (e) {
-                    console.log('Error checking active workout');
+                    console.log('Error checking workout status');
                 }
             };
-            checkActive();
+            checkData();
         }, [])
     );
 
     const handleStartSession = async () => {
         if (activeWorkoutId) {
-            // Resume
-            router.push({
-                pathname: '/workout-session',
-                params: { workoutId: activeWorkoutId }
-            });
+            router.push({ pathname: '/workout-session', params: { workoutId: activeWorkoutId } });
             return;
         }
 
@@ -51,7 +56,6 @@ export default function WorkoutScreen() {
             }
         } catch (error) {
             console.error('Failed to start workout', error);
-            // Optionally show alert
         }
     };
 
@@ -101,13 +105,34 @@ export default function WorkoutScreen() {
                 </View>
 
                 {/* Previous Routine Card */}
-                <TouchableOpacity className="mt-8 p-5 bg-primary/5 border border-primary/10 rounded-2xl flex-row items-center gap-4">
+                <TouchableOpacity 
+                    disabled={!lastWorkoutId}
+                    onPress={() => lastWorkoutId && router.push({ pathname: '/workout-details/[id]', params: { id: lastWorkoutId } })}
+                    className="mt-8 p-5 bg-primary/5 border border-primary/10 rounded-2xl flex-row items-center gap-4 active:bg-primary/10"
+                >
                     <View className="bg-primary/20 p-2 rounded-lg">
                         <MaterialIcons name="history" size={24} color="#3b82f6" />
                     </View>
                     <View className="flex-1">
                         <Text className="text-white text-sm font-bold">Previous Routine</Text>
-                        <Text className="text-gray-500 text-xs">Last session: Push Day A (3 days ago)</Text>
+                        <Text className="text-gray-500 text-xs">
+                             {lastWorkoutId ? 'View details of your last session' : 'No history yet'}
+                        </Text>
+                    </View>
+                    <MaterialIcons name="chevron-right" size={24} color="#4b5563" />
+                </TouchableOpacity>
+
+                {/* View Workout History Button */}
+                <TouchableOpacity 
+                    onPress={() => router.push('/workout-history')}
+                    className="mt-4 p-5 bg-card-dark border border-white/5 rounded-2xl flex-row items-center gap-4 active:bg-white/5"
+                >
+                    <View className="bg-white/5 p-2 rounded-lg">
+                        <MaterialIcons name="list-alt" size={24} color="#9ca3af" />
+                    </View>
+                    <View className="flex-1">
+                        <Text className="text-white text-sm font-bold">Workout History</Text>
+                        <Text className="text-gray-500 text-xs">View all past sessions</Text>
                     </View>
                     <MaterialIcons name="chevron-right" size={24} color="#4b5563" />
                 </TouchableOpacity>
@@ -121,7 +146,7 @@ export default function WorkoutScreen() {
                     className="w-full bg-primary h-16 rounded-2xl items-center justify-center shadow-lg shadow-primary/30 active:scale-[0.98]"
                 >
                     <Text className="text-white font-black text-lg uppercase tracking-widest">
-                        {activeWorkoutId ? 'Resume Session' : 'Start Session'}
+                         {activeWorkoutId ? 'Resume Session' : 'Start Session'}
                     </Text>
                 </TouchableOpacity>
             </View>
