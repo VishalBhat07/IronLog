@@ -3,14 +3,17 @@ import { View, Text, ScrollView, TouchableOpacity, TextInput } from 'react-nativ
 import { MaterialIcons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
-import { useRouter } from 'expo-router';
+import { useRouter, useLocalSearchParams } from 'expo-router';
+import { workoutApi } from '@/services/api';
 
 export default function AddExerciseScreen() {
     const router = useRouter();
+    const { workoutId } = useLocalSearchParams();
     const [selectedCategory, setSelectedCategory] = useState('All');
     const categories = ['All', 'Chest', 'Back', 'Legs', 'Shoulders', 'Arms', 'Core'];
 
     // Hardcoded List based on your HTML + extras
+    // In a real app, this would come from an API: GET /exercises
     const exercises = [
         {
             category: 'Chest',
@@ -45,6 +48,22 @@ export default function AddExerciseScreen() {
             ]
         }
     ];
+
+    const handleAddExercise = async (name: string, target: string) => {
+        if (!workoutId) {
+             // Maybe logging from dashboard without active session? 
+             // For now assume active session.
+             return;
+        }
+        try {
+            const result = await workoutApi.addExercise(workoutId as string, name, target);
+            if (result.success) {
+                router.back();
+            }
+        } catch (error) {
+            console.error('Error adding exercise', error);
+        }
+    };
 
     return (
         <SafeAreaView className="flex-1 bg-charcoal" edges={['top', 'left', 'right']}>
@@ -103,6 +122,7 @@ export default function AddExerciseScreen() {
                             {group.items.map((item, idx) => (
                                 <TouchableOpacity 
                                     key={idx}
+                                    onPress={() => handleAddExercise(item.name, item.target)}
                                     className="flex-row items-center justify-between px-4 py-3 border-b border-[#1e2632] active:bg-[#1e2632]"
                                 >
                                     <View className="flex-row items-center gap-4">

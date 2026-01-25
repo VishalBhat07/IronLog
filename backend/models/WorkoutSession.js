@@ -3,18 +3,18 @@ const mongoose = require('mongoose');
 const SetSchema = new mongoose.Schema(
   {
     reps: { type: Number, required: true },
-    weight: { type: Number, required: true } // kg
-  },
-  { _id: false }
+    weight: { type: Number, required: true }, // kg
+    completed: { type: Boolean, default: false }, // Useful for UI
+    timestamp: { type: Date, default: Date.now }
+  }
 );
 
 const ExerciseSchema = new mongoose.Schema(
   {
     name: { type: String, required: true },
-    muscleGroup: { type: String }, // optional
-    sets: { type: [SetSchema], required: true }
-  },
-  { _id: false }
+    target: { type: String }, // 'Chest • Barbell' etc
+    sets: { type: [SetSchema], default: [] }
+  }
 );
 
 const WorkoutSessionSchema = new mongoose.Schema(

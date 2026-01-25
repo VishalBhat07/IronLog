@@ -6,6 +6,10 @@ const connectDB = require('./config/db');
 const app = express();
 const port = process.env.PORT || 3000;
 
+const authRoutes = require('./routes/authRoutes');
+// const bodyMetricRoutes = require('./routes/bodyMetricRoutes');
+const workoutRoutes = require('./routes/workoutRoutes');
+
 // Connect Database
 connectDB();
 
@@ -14,7 +18,9 @@ app.use(cors());
 app.use(express.json());
 
 // Routes
-app.use('/api/auth', require('./routes/authRoutes'));
+app.use('/api/auth', authRoutes);
+// app.use('/api/users', bodyMetricRoutes);
+app.use('/api/workouts', workoutRoutes);
 
 // Health check endpoint
 app.get('/health', (req, res) => {

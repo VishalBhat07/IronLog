@@ -4,11 +4,28 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
 import { useState } from 'react';
 import { useRouter } from 'expo-router';
+import { workoutApi } from '@/services/api';
 
 export default function WorkoutScreen() {
     const router = useRouter();
     const [selectedType, setSelectedType] = useState('Strength');
     const workoutTypes = ['Strength', 'Cardio', 'Mixed', 'Recovery'];
+
+    const handleStartSession = async () => {
+        try {
+            const result = await workoutApi.start(selectedType.toLowerCase());
+            if (result.success) {
+                router.push({
+                    pathname: '/workout-session',
+                    params: { workoutId: result.workoutId }
+                });
+            }
+        } catch (error) {
+            console.error('Failed to start workout', error);
+            // Optionally could navigate anyway for offline/demo if API fails
+            // But for now, strict API.
+        }
+    };
 
     return (
         <SafeAreaView className="flex-1 bg-charcoal">
@@ -70,13 +87,12 @@ export default function WorkoutScreen() {
             {/* Fixed Bottom Action */}
             <View className="absolute left-0 right-0 p-6 bg-charcoal/90 border-t border-white/5" style={{ bottom: 80, paddingBottom: 20 }}>
                  <TouchableOpacity 
-                    onPress={() => router.push('/workout-session')}
+                    onPress={handleStartSession}
                     className="w-full bg-primary h-16 rounded-2xl items-center justify-center shadow-lg shadow-primary/30 active:scale-[0.98]"
                 >
                     <Text className="text-white font-black text-lg uppercase tracking-widest">Start Session</Text>
                 </TouchableOpacity>
             </View>
-
 
         </SafeAreaView>
     );
